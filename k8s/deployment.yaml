@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: service-a
+  namespace: devops-app
+  labels:
+    app: service-a
 spec:
   replicas: 1
   selector:
@@ -14,22 +17,77 @@ spec:
     spec:
       containers:
       - name: service-a
-        image: myorg/devops-app:latest
+        image: myorg/devops-app:1.0.0
         ports:
         - containerPort: 5000
         resources:
           requests:
             memory: "64Mi"
             cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: service-a-secrets
+              key: secret-key
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: service-a
+  namespace: devops-app
 spec:
+  type: ClusterIP
   selector:
     app: service-a
   ports:
   - port: 5000
     targetPort: 5000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b
+  namespace: devops-app
+  labels:
+    app: service-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-b
+  template:
+    metadata:
+      labels:
+        app: service-b
+    spec:
+      containers:
+      - name: service-b
+        image: myorg/devops-worker:1.0.0
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        env:
+        - name: SERVICE_A_URL
+          value: "http://service-a:5000"

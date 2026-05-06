@@ -1,17 +1,21 @@
 # Service A Dockerfile
-FROM python:3.11
+FROM python:3.11-slim
 
 WORKDIR /app
 
+# Copy dependencies first for better layer caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy rest of the code
 COPY . .
 
-RUN pip install -r requirements.txt
-
-ENV SECRET_KEY=supersecret123
-ENV DB_PASSWORD=admin1234
-
+# Don't hardcode secrets — pass via environment variables at runtime
 EXPOSE 5000
 
-USER root
+# Run as non-root user for security
+RUN useradd -m appuser
+USER appuser
 
-CMD ["python", "app.py"]
+# Use gunicorn for production instead of python app.py
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app:app"]

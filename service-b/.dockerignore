@@ -1,0 +1,14 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules/
+npm-debug.log
+*.log
+
+# Environment
+.env
+
+# Mac
+.DS_Store

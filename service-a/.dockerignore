@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+
+# Environment
+.env
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Tests
+tests/
